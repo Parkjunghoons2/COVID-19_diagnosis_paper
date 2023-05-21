@@ -1,27 +1,24 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Sat May 15 19:20:46 2021
+Created on Sat Apr 24 23:24:33 2021
 
 @author: nextgen
 """
 
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Apr 16 16:20:21 2021
+
+@author: nextgen
+"""
 
 import os
 
 import configs
 
 import tensorflow as tf
-'''
-gpus = tf.config.experimental.list_physical_devices('GPU')
-if gpus:
-  # 텐서플로가 첫 번째 GPU만 사용하도록 제한
-  try:
-    tf.config.experimental.set_visible_devices(gpus[0], 'GPU')
-  except RuntimeError as e:
-    # 프로그램 시작시에 접근 가능한 장치가 설정되어야만 합니다
-    print(e)
-'''
 
 import re
 
@@ -71,29 +68,18 @@ except ImportError:
 
 
 def bernstein_poly(i, n, t):
-
     """
-
      The Bernstein polynomial of n, i as a function of t
-
     """
-
- 
 
     return comb(n, i) * ( t**(n-i) ) * (1 - t)**i
 
  
 
 def bezier_curve(points, nTimes=1000):
-
     """
-
        Given a set of control points, return the
-
        bezier curve defined by the control points.
-
- 
-
        Control points should be a list of lists, or list of tuples
 
        such as [ [1,1], 
@@ -103,36 +89,20 @@ def bezier_curve(points, nTimes=1000):
                  [4,5], ..[Xn, Yn] ]
 
         nTimes is the number of time steps, defaults to 1000
-
- 
-
         See http://processingjs.nihongoresources.com/bezierinfo/
 
     """
 
- 
-
     nPoints = len(points)
-
     xPoints = np.array([p[0] for p in points])
-
     yPoints = np.array([p[1] for p in points])
-
- 
 
     t = np.linspace(0.0, 1.0, nTimes)
 
- 
-
     polynomial_array = np.array([ bernstein_poly(i, nPoints-1, t) for i in range(0, nPoints)   ])
 
-    
-
     xvals = np.dot(xPoints, polynomial_array)
-
     yvals = np.dot(yPoints, polynomial_array)
-
- 
 
     return xvals, yvals
 
@@ -143,19 +113,11 @@ def data_augmentation(x, y, prob=0.5):
     # augmentation by flipping
 
     cnt = 3
-
     while random.random() < prob and cnt > 0:
-
         degree = random.choice([0, 1, 2])
-
         x = np.flip(x, axis=degree)
-
         y = np.flip(y, axis=degree)
-
         cnt = cnt - 1
-
- 
-
     return x, y
 
  
@@ -169,19 +131,15 @@ def nonlinear_transformation(x, prob=0.5):
     points = [[0, 0], [random.random(), random.random()], [random.random(), random.random()], [1, 1]]
 
     xpoints = [p[0] for p in points]
-
     ypoints = [p[1] for p in points]
 
     xvals, yvals = bezier_curve(points, nTimes=100000)
 
     if random.random() < 0.5:
-
         # Half change to get flip
-
         xvals = np.sort(xvals)
 
     else:
-
         xvals, yvals = np.sort(xvals), np.sort(yvals)
 
     nonlinear_x = np.interp(x, xvals, yvals)
@@ -193,11 +151,9 @@ def nonlinear_transformation(x, prob=0.5):
 def local_pixel_shuffling(x, prob=0.5):
 
     if random.random() >= prob:
-
         return x
 
     image_temp = copy.deepcopy(x)
-
     orig_image = copy.deepcopy(x)
 
     img_rows, img_cols, img_deps = x.shape
@@ -205,21 +161,14 @@ def local_pixel_shuffling(x, prob=0.5):
     num_block = 500
 
     for _ in range(num_block):
-
         block_noise_size_x = random.randint(1, img_rows//10)
-
         block_noise_size_y = random.randint(1, img_cols//10)
-
         #block_noise_size_z = random.randint(0, 3)
-
         noise_x = random.randint(0, img_rows-block_noise_size_x)
-
         noise_y = random.randint(0, img_cols-block_noise_size_y)
-
         #noise_z = random.randint(0, img_deps-block_noise_size_z)
 
         if img_deps >3 :
-
             filters = 3
 
             window = orig_image[noise_x:noise_x+block_noise_size_x, 
@@ -231,9 +180,7 @@ def local_pixel_shuffling(x, prob=0.5):
                            ]
 
             window = window.flatten()
-
             np.random.shuffle(window)
-
             window = window.reshape((block_noise_size_x, 
 
                                  block_noise_size_y, 
@@ -241,7 +188,6 @@ def local_pixel_shuffling(x, prob=0.5):
                                  #block_noise_size_z))
 
             image_temp[noise_x:noise_x+block_noise_size_x, 
-
                       noise_y:noise_y+block_noise_size_y, 
                       :] = window
                       #noise_z:noise_z+block_noise_size_z] = window
@@ -249,9 +195,7 @@ def local_pixel_shuffling(x, prob=0.5):
         else :
 
             window = orig_image[noise_x:noise_x+block_noise_size_x, 
-
                                noise_y:noise_y+block_noise_size_y, 
-
                                #noise_z:noise_z+block_noise_size_z,
                                 :,
                            ]
@@ -261,22 +205,17 @@ def local_pixel_shuffling(x, prob=0.5):
             np.random.shuffle(window)
 
             window = window.reshape((block_noise_size_x, 
-
                                  block_noise_size_y, 
                                  img_deps))
-
                                  #block_noise_size_z))
 
             image_temp[noise_x:noise_x+block_noise_size_x, 
-
                       noise_y:noise_y+block_noise_size_y, 
                        :] = window
 
                       #noise_z:noise_z+block_noise_size_z] = window
 
     local_shuffling_x = image_temp
-
- 
 
     return local_shuffling_x
 
@@ -287,21 +226,14 @@ def image_in_painting(x):
     img_rows, img_cols, img_deps = x.shape
 
     cnt = 5
-
     while cnt > 0 and random.random() < 0.95:
 
         block_noise_size_x = random.randint(img_rows//6, img_rows//3)
-
         block_noise_size_y = random.randint(img_cols//6, img_cols//3)
-
         block_noise_size_z = random.randint(0,3)
-
         noise_x = random.randint(3, img_rows-block_noise_size_x-3)
-
         noise_y = random.randint(3, img_cols-block_noise_size_y-3)
-
         noise_z = random.randint(0, img_deps-block_noise_size_z)
-        
         x_point = random.randint(noise_x, noise_x+block_noise_size_x)
         y_point = random.randint(noise_y, noise_y+block_noise_size_y)
         
@@ -312,11 +244,8 @@ def image_in_painting(x):
                 inpainting[row,col] = x[x_point,y_point]
 
         x[
-
           noise_x:noise_x+block_noise_size_x, 
-
           noise_y:noise_y+block_noise_size_y, 
-
           :] = inpainting *1.0
 
         cnt -= 1
@@ -330,9 +259,7 @@ def image_in_painting(x):
 def image_out_painting(x):
 
     img_rows, img_cols, img_deps = x.shape
-
     image_temp = copy.deepcopy(x)
-    
 
     x = np.ones((img_rows, img_cols, img_deps) ) * 1.0
     
@@ -346,25 +273,16 @@ def image_out_painting(x):
     cnt = 4
     while cnt>0:
         block_noise_size_x = img_rows - random.randint(3*img_rows//7, 4*img_rows//7)
-
         block_noise_size_y = img_cols - random.randint(3*img_cols//7, 4*img_cols//7)
-
         block_noise_size_z = img_deps - random.randint(3*img_deps//7, 4*img_deps//7)
-
         noise_x = random.randint(3, img_rows-block_noise_size_x-3)
-
         noise_y = random.randint(3, img_cols-block_noise_size_y-3)
-
         noise_z = random.randint(0, img_deps-block_noise_size_z)
 
         x[
-
           noise_x:noise_x+block_noise_size_x, 
-
           noise_y:noise_y+block_noise_size_y, 
-
           :] = image_temp[ noise_x:noise_x+block_noise_size_x, 
-
                                                        noise_y:noise_y+block_noise_size_y, 
                                                        :] * 1.0
         cnt -= 1
@@ -425,61 +343,41 @@ def generate_pair(path):
     config = configs.models_genesis_config
 
     img = Image.open(path)
-
     img = img.convert('RGB')
-
     img = img.resize((512,512))
 
     #img= tf.keras.preprocessing.image.img_to_array(img)
 
     img = np.array(img)
-
     img_rows, img_cols, img_deps = img.shape[0], img.shape[1], img.shape[2]
 
     while True:
-
         y = img/255
-
         x = copy.deepcopy(y)            
 
         # Autoencoder
-
         x = copy.deepcopy(y)
 
             
 
         # Flip
-
         x, y = data_augmentation(x, y, config.flip_rate)
 
- 
-
         # Local Shuffle Pixel
-
         x = local_pixel_shuffling(x, prob=config.local_rate)
 
-            
-
         # Apply non-Linear transformation with an assigned probability
-
         x = nonlinear_transformation(x, config.nonlinear_rate)
 
-            
-
         # Inpainting & Outpainting
-
         if random.random() < config.paint_rate:
 
             if random.random() < config.inpaint_rate:
-
                 # Inpainting
-
                 x = image_in_painting(x)
 
             else:
-
                 # Outpainting
-
                 x = image_out_painting(x)
 
 
@@ -535,7 +433,7 @@ def get_nih2():
     fileExt = r".png"
     #onlyfiles = [os.path.join(mypath, _) for _ in os.listdir(mypath) if _.endswith(fileExt)]
     onlyfiles = [os.path.join(targetdir,_) for _ in os.listdir(targetdir) if _.endswith(fileExt)]
-    onlyfiles = onlyfiles[-999:]
+    onlyfiles = onlyfiles[-1001:-1]
     #onlyfiles = [f for f in listdir(path) if isfile(join(path, f))]
     config = configs.models_genesis_config
     
@@ -553,8 +451,8 @@ valid_dataset = tf.data.Dataset.from_generator(get_nih2,
                                          output_shapes=((512,512,3), (512,512,3)),
                                          output_types=(tf.float32,tf.float32))                                        
 
-train_dataset = train_dataset.shuffle(150).batch(8).repeat(8)
-valid_dataset = valid_dataset.shuffle(150).batch(8).repeat(8)
+train_dataset = train_dataset.shuffle(150).batch(8).repeat(6)
+valid_dataset = valid_dataset.shuffle(150).batch(8).repeat(6)
 
 
 import numpy as np 
@@ -621,6 +519,7 @@ def unet(pretrained_weights = None,input_size = (512,512,3)):
     	model.load_weights(pretrained_weights)
 
     return model
+
 
 def unet_cbam(pretrained_weights=None, input_size=(512, 512, 3), kernel_size=3, ratio=3, activ_regularization=0.01):
     inputs = tf.keras.Input(input_size)
@@ -720,11 +619,6 @@ def unet_cbam(pretrained_weights=None, input_size=(512, 512, 3), kernel_size=3, 
 
     return model
 
-dr_ratio = 0.2
-ratio=8
-activ_regularization=0.0001
-kernel_size=7
-kernel_initializer = tf.keras.initializers.VarianceScaling()
 from tensorflow.keras.regularizers import l2
 from tensorflow.keras.regularizers import l1
 from tensorflow.keras.models import *
@@ -736,12 +630,12 @@ def CBAM_attention(inputs,ratio,kernel_size,dr_ratio,activ_regularization):
 
     ##channel attention##
     avg_pool = tf.reduce_mean(x, axis=[1,2], keepdims=True)
-    avg_pool = Dense(units = channel//ratio ,activation='relu', activity_regularizer=tf.keras.regularizers.l1(activ_regularization),kernel_initializer=tf.keras.initializers.RandomNormal(mean=0.0, stddev=0.5), use_bias=True,bias_initializer='zeros',trainable=True)(avg_pool)
-    avg_pool = Dense(channel, activation = 'relu', kernel_initializer=tf.keras.initializers.RandomNormal(mean=0.0, stddev=0.5),activity_regularizer=tf.keras.regularizers.l1(activ_regularization), use_bias=True, bias_initializer='zeros',trainable=True)(avg_pool)
+    avg_pool = Dense(units = channel//ratio ,activation='relu', activity_regularizer=tf.keras.regularizers.l1(activ_regularization),kernel_initializer='he_normal', use_bias=True,bias_initializer='zeros',trainable=True)(avg_pool)
+    avg_pool = Dense(channel, kernel_initializer='he_normal',activity_regularizer=tf.keras.regularizers.l1(activ_regularization), use_bias=True, bias_initializer='zeros',trainable=True)(avg_pool)
 
     max_pool = tf.reduce_max(x, axis=[1,2], keepdims=True)
-    max_pool = Dense(units = channel//ratio, activation='relu', activity_regularizer=tf.keras.regularizers.l1(activ_regularization),kernel_initializer=tf.keras.initializers.RandomNormal(mean=0.0, stddev=0.5), use_bias=True,bias_initializer='zeros',trainable=True)(max_pool)
-    max_pool = Dense(channel, activation='relu', kernel_initializer=tf.keras.initializers.RandomNormal(mean=0.0, stddev=0.5), activity_regularizer=tf.keras.regularizers.l1(activ_regularization),use_bias=True, bias_initializer='zeros',trainable=True)(max_pool)
+    max_pool = Dense(units = channel//ratio, activation='relu', activity_regularizer=tf.keras.regularizers.l1(activ_regularization),kernel_initializer='he_normal', use_bias=True,bias_initializer='zeros',trainable=True)(max_pool)
+    max_pool = Dense(channel, activation='relu', kernel_initializer='he_normal', activity_regularizer=tf.keras.regularizers.l1(activ_regularization),use_bias=True, bias_initializer='zeros',trainable=True)(max_pool)
     f = Add()([avg_pool, max_pool])
     f = Activation('sigmoid')(f)
 
@@ -758,10 +652,16 @@ def CBAM_attention(inputs,ratio,kernel_size,dr_ratio,activ_regularization):
     attention_feature = multiply([x,concat])
     return attention_feature
 
+ratio=8
+activ_regularization=0.1
+kernel_size=7
+kernel_initializer = tf.keras.initializers.VarianceScaling()
+dr_ratio=0.2
+targetdir = '/home/ubuntu/Desktop/data/pjh/images/images'
 
-checkpoint_path1 = './pretrained_weights_nih.ckpt'
+checkpoint_path1 = './pretrained_weights_nih'
 checkpoint_dir1 = os.path.join(os.getcwd()+checkpoint_path1)
-checkpoint_path2 = './pretrained_weights_nih.ckpt'
+checkpoint_path2 = './pretrained_weights'
 checkpoint_dir2 = os.path.join(os.getcwd()+checkpoint_path2)
 cp_callback1 = tf.keras.callbacks.ModelCheckpoint(filepath=checkpoint_path1,
                                                 save_weights_only=True,
@@ -774,19 +674,26 @@ cp_callback2 = tf.keras.callbacks.ModelCheckpoint(filepath=checkpoint_path2,
                                                 save_best_only=True,
                                                 mode='max')
 
+
+
 def ssim_loss_minusone(y_true, y_pred):
     return 1-tf.reduce_mean(tf.image.ssim(tf.convert_to_tensor(y_true), tf.convert_to_tensor(y_pred), 2.0))
 
 def ssim_loss(y_true, y_pred):
     return tf.reduce_mean(tf.image.ssim(tf.convert_to_tensor(y_true), tf.convert_to_tensor(y_pred), 2.0))
 
+#Model: Input Image size: 32X32X1 output Image size: 28X28X1 
+#check model.summary
+
+#print(unet_cbam_model.summary())
+
 strategy = tf.distribute.MirroredStrategy()
 with strategy.scope():
-    unet_cbam_model = unet(pretrained_weights = None, input_size=(512,512,3))
+    unet_cbam_model = unet_cbam(pretrained_weights = 'nih_unet_cbam_20.h5', input_size=(512,512,3),kernel_size=3, ratio=3, activ_regularization=0.01 )
     unet_cbam_model.compile(optimizer=tf.keras.optimizers.Adam(lr = 1e-4),
             loss='mse',
             metrics=['mse',ssim_loss])
-print(unet_cbam_model.summary())
+
 history = unet_cbam_model.fit(train_dataset,
                             validation_data=valid_dataset, 
                             validation_steps=len(onlyfiles2)//8,
@@ -800,32 +707,7 @@ history = unet_cbam_model.fit(train_dataset,
                             callbacks=[cp_callback1]
                            )
 
-unet_cbam_model.save_weights('nih_unet_cbam_mse.h5')
+unet_cbam_model.save_weights('nih_unet_cbam_covid_classification2.h5')
 
-'''
-import cv2
-for i in range(100):
-    img = Image.open(onlyfiles1[i])
-
-    img = img.convert('RGB')
-
-    img = img.resize((512,512))
-
-    #img= tf.keras.preprocessing.image.img_to_array(img)
-
-    img = np.array(img)
-    
-    img = img/255
-    
-    pred = unet_cbam_model.predict(img.reshape(-1,512,512,3))
-    
-    pred = pred.reshape(512,512,3)
-    min_val = np.min(pred)
-    max_val = np.max(pred)
-    pred = (pred - min_val) / (max_val - min_val)
-    
-    plt.imsave('/home/ubuntu/Desktop/data/pjh/nih/orig_img_%d.png'%(i), pred)
-    
-'''
-
+#unet_cbam_model.load_weights('nih_unet_cbam_20_mse.h5')
 
