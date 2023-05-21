@@ -2,6 +2,11 @@
 
 ## These are source codes for my paper 'A deep learning model with self-supervised elarning and attention mechanism for COVID-19 diagnosis using chest X-ray images'
 
+## Paper Accepted by Electronics
+### Impact Factor 2.69 (2021)
+### Cyted 12 times (2023.05.21)
+
+
 # Self-supervised Learning architecture
 ![modelgenesis1](https://user-images.githubusercontent.com/47052073/140608709-6ce9812c-63a0-4075-8557-09cfa95fecf1.png)
 ![pretexttask](https://user-images.githubusercontent.com/47052073/140608722-5ee98dfa-a7cc-4b56-9a8f-3538dba02a76.png)
